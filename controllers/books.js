@@ -7,7 +7,7 @@ export const getHomeBooks = async (req, res) => {
 
     try {
 
-       
+
         const books = await Book.find();
 
         const booksByCategory = {};
@@ -44,7 +44,7 @@ export const getBooks = async (req, res) => {
 
 
         // const books = await Book.find().skip(skip).limit(limit);
-        
+
         // return res.status(200).json({
         //     currentPage: page,
         //     totalPages: totalPages,
@@ -62,14 +62,14 @@ export const getBooks = async (req, res) => {
 }
 export const getBookById = async (req, res) => {
 
-    
+
     try {
 
         const id = req.params.id;
         // console.log(id);
         const book = await Book.findById(id)
         return res.status(200).json(
-           book,
+            book,
         );
     }
     catch (err) {
@@ -79,13 +79,13 @@ export const getBookById = async (req, res) => {
 }
 export const getRelatedBookById = async (req, res) => {
 
-    
+
     try {
 
         const id = req.params.id;
         // console.log(id);
         const book = await Book.findById(id)
-        const relatebooks = await Book.find({category:book.category})
+        const relatebooks = await Book.find({ category: book.category })
         return res.status(200).json(
             relatebooks,
         );
@@ -124,7 +124,7 @@ export const addBooks = async (req, res) => {
                 name: authorName,
                 shortDescripton: authorShortDescripton
             },
-            issuedTo:[]
+            issuedTo: []
 
         })
 
@@ -142,10 +142,10 @@ export const addBooks = async (req, res) => {
         return res.status(409).json({ msg: err.message })
     }
 }
-export const updateBook=async(req,res)=>{
-    try{
+export const updateBook = async (req, res) => {
+    try {
         const uniqueNames = req.files.map(file => file.filename);
-        const id=req.params.id;
+        const id = req.params.id;
         const {
             name,
             description,
@@ -159,40 +159,75 @@ export const updateBook=async(req,res)=>{
 
         } = req.body
 
-        const book=await Book.findById(id);
+        const book = await Book.findById(id);
 
-        book.name=name;
-        book.description=description;
-        book.category=category;
-        book.price=price;
-        book.available=available;
-        book.rating=rating;
-        book.quantity=quantity;
-      
-        book.author.name=authorName;
-        book.author.shortDescripton=authorShortDescripton;
-        
+        book.name = name;
+        book.description = description;
+        book.category = category;
+        book.price = price;
+        book.available = available;
+        book.rating = rating;
+        book.quantity = quantity;
 
-        if(uniqueNames.length>0)
-        {
-            book.photo=uniqueNames;
+        book.author.name = authorName;
+        book.author.shortDescripton = authorShortDescripton;
+
+
+        if (uniqueNames.length > 0) {
+            book.photo = uniqueNames;
         }
 
-        const updateBook=await book.save()
-       
-       
-        
+        const updateBook = await book.save()
+
+
+
         return res.status(201).json(updateBook)
 
-    }catch(err)
-    {
+    } catch (err) {
         console.log(err);
-        return res.status(409).json({msg:err.message})
+        return res.status(409).json({ msg: err.message })
     }
 }
 
+export const searchBook = async (req, res) => {
+    try {
+        const { q } = req.query;
+
+        console.log(q)
+
+        // Create a query to q by phone, name, or email
+     
+
+        if (!q) {
+            const books = await Book.find();
+
+            return res.status(200).json(books);
+        }
+        let query = {
+
+            $or: [
+                { category: { $regex: q, $options: 'i' } },
+                { name: { $regex: q, $options: 'i' } },
+                { description: { $regex: q, $options: 'i' } },
+             
+            ]
+
+        };
+
+        // Retrieve users based on the constructed query
+        const books = await Book.find(query);
+
+        if (books.length === 0) {
+            return res.status(404).json({ error: "No Books Found", msg: "No Books Found" });
+        }
+
+        // Return the retrieved users
+        return res.status(200).json(books);
+
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+};
 
 
 
-
-// book Recommneder

@@ -173,7 +173,7 @@ export const decreaseQuantity = async (req, res) => {
 export const getUserByPhoneNameOrEmail = async (req, res) => {
     try {
         const { search } = req.query;
-
+       
        
 
         // Create a query to search by phone, name, or email
@@ -186,9 +186,9 @@ export const getUserByPhoneNameOrEmail = async (req, res) => {
                     { role: { $ne: 'ADMIN' } },
                     {
                         $or: [
-                            { phone: { $regex: input, $options: 'i' } },
-                            { name: { $regex: input, $options: 'i' } },
-                            { email: { $regex: input, $options: 'i' } }
+                            { phone: { $regex: search, $options: 'i' } },
+                            { name: { $regex: search, $options: 'i' } },
+                            { email: { $regex: search, $options: 'i' } }
                         ]
                     }
                 ]
@@ -198,12 +198,21 @@ export const getUserByPhoneNameOrEmail = async (req, res) => {
         // Retrieve users based on the constructed query
         const users = await User.find(query);
 
+        const resUsers=users.map((user)=>{
+            return{
+                _id:user._id,
+                name:user.name,
+                email:user.email,
+                phone:user.phone,
+                books:user.books,
+            }
+        })
         if (users.length === 0) {
             return res.status(404).json({ error: "No Users Found", msg: "No Users Found" });
         }
 
         // Return the retrieved users
-        return res.status(200).json(users);
+        return res.status(200).json(resUsers);
 
     } catch (err) {
         return res.status(500).json({ error: err.message });
