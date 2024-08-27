@@ -15,7 +15,7 @@ export const issueBook = async (req, res) => {
 
         // Check if the book is already issued to the user
         if (book.issuedTo.includes(userId)) {
-            return res.status(400).json({ error: "Book Already Issued", msg: "Book Already Issued" });
+            return res.status(401).json({ error: "Book Already Issued", msg: "Book Already Issued" });
         }
 
         // Check if there are enough books available
@@ -134,12 +134,15 @@ export const getAllBookHistory = async (req, res) => {
                 id: history.bookId._id,
                 name: history.bookId.name,
                 author: history.bookId.author,
+                photo:history.bookId.photo,
+                category:history.bookId.category,
                 quantity: history.bookId.quantity,
             },
             userDetails: {
                 id: history.userId._id,
                 name: history.userId.name,
                 email: history.userId.email,
+                phone: history.userId.phone,
             },
             status: history.status,
             issueDate: history.issueDate,
