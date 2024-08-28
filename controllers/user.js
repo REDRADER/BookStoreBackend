@@ -1,6 +1,7 @@
 import Book from "../models/Book.js";
 import User from "../models/User.js";
-
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 // add to cart
 
 export const addToCart = async (req, res) => {
@@ -42,7 +43,7 @@ export const addToCart = async (req, res) => {
         }
         user.cart = tempCart;
 
-  
+
 
 
 
@@ -173,8 +174,8 @@ export const decreaseQuantity = async (req, res) => {
 export const getUserByPhoneNameOrEmail = async (req, res) => {
     try {
         const { search } = req.query;
-       
-       
+
+
 
         // Create a query to search by phone, name, or email
         let query = { role: { $ne: 'ADMIN' } };
@@ -198,13 +199,13 @@ export const getUserByPhoneNameOrEmail = async (req, res) => {
         // Retrieve users based on the constructed query
         const users = await User.find(query);
 
-        const resUsers=users.map((user)=>{
-            return{
-                _id:user._id,
-                name:user.name,
-                email:user.email,
-                phone:user.phone,
-                books:user.books,
+        const resUsers = users.map((user) => {
+            return {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                books: user.books,
             }
         })
         if (users.length === 0) {
@@ -218,10 +219,131 @@ export const getUserByPhoneNameOrEmail = async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 };
+export const getUsers = async (req, res) => {
+    try {
 
-// place order
+        let query = { role: { $ne: 'ADMIN' } };
 
-// get all orders
+        // Retrieve users based on the constructed query
+        const users = await User.find(query);
 
-// view Specific Orders
+        const resUsers = users.map((user) => {
+            return {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                books: user.books,
+            }
+        })
+        if (users.length === 0) {
+            return res.status(404).json({ error: "No Users Found", msg: "No Users Found" });
+        }
+
+        // Return the retrieved users
+        return res.status(200).json(resUsers);
+
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+};
+export const getUserById = async (req, res) => {
+    try {
+
+        const {id}=req.params;
+        
+        // Retrieve users based on the constructed query
+        const user = await User.findById(id);
+
+        if(!user)
+        {
+            return res.status(404).json({ error: "No User Found with the id", msg: "No User Found with the id" });
+        }
+        const resUsers =  {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                books: user.books,
+            }
+        
+      
+        // Return the retrieved users
+        return res.status(200).json(resUsers);
+    
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+};
+
+
+export const addUser = async (req, res) => {
+    try {
+        const { name, email, password, phone } = req.body;
+
+
+        const salt = await bcrypt.genSalt();
+
+        let passwordHash = "";
+        if (password) {
+            passwordHash = await bcrypt.hash(password, salt);
+        }
+        else {
+            passwordHash = await bcrypt.hash("user@123", salt);
+        }
+
+        const newUser = new User({
+            name,
+            phone,
+            email,
+            password: passwordHash,
+
+            role: "USER"
+        });
+
+        const savedUser = await newUser.save();
+        delete savedUser.password;
+
+        res.status(201).json(savedUser);
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: err.message });
+    }
+};
+
+export const editUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, email, password, phone } = req.body;
+
+        const user = await User.findById(id);
+
+        let passwordHash = ""
+        if (password) {
+
+            const salt = await bcrypt.genSalt();
+
+            passwordHash = await bcrypt.hash(password, salt);
+            user.password = passwordHash;
+        }
+
+
+
+
+        user.name = name;
+        user.email = email;
+        user.phone = phone;
+
+
+
+
+
+        const savedUser = await user.save();
+        delete savedUser.password;
+        res.status(201).json(savedUser);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 
