@@ -168,8 +168,7 @@ export const getBookHistoryByBookId = async (req, res) => {
 
         // Find all history records for the given book ID
         const bookHistories = await BookHistory.find({ bookId:bookId }).populate('userId');
-        console.log(bookHistories)
-
+      
         // Check if there are any history records for the provided book ID
         if (bookHistories.length === 0) {
             return res.status(404).json({ error: "No History Found for this Book", msg: "No History Found for this Book" });
@@ -194,6 +193,58 @@ export const getBookHistoryByBookId = async (req, res) => {
                 id: history.userId._id,
                 name: history.userId.name,
                 email: history.userId.email,
+            },
+            status: history.status,
+            issueDate: history.issueDate,
+            expectedReturnDate: history.expectedReturnDate,
+            returnDate: history.returnDate,
+            remark: history.remark,
+            createdAt: history.createdAt,
+            updatedAt: history.updatedAt,
+        }));
+
+        // Return the detailed history data
+        return res.status(200).json(detailedHistories);
+
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+};
+export const getBookHistoryByUserId = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // Find all history records for the given book ID
+        const bookHistories = await BookHistory.find({ userId:userId,status:"issued" }).populate('bookId');
+      
+
+        // Check if there are any history records for the provided book ID
+        if (bookHistories.length === 0) {
+            return res.status(404).json({ error: "No History Found for this Book", msg: "No History Found for this Book" });
+        }
+
+        // Fetch the book details
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: "User Not Found", msg: "User Not Found" });
+        }
+
+        // Format the data to include book and user details
+        const detailedHistories = bookHistories.map((history) => ({
+            historyId: history._id,
+            bookDetails: {
+                id: history.bookId._id,
+                name: history.bookId.name,
+                author: history.bookId.author,
+                quantity: history.bookId.quantity,
+                photo:history.bookId.photo,
+                category:history.bookId.category,
+                
+            },
+            userDetails: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
             },
             status: history.status,
             issueDate: history.issueDate,

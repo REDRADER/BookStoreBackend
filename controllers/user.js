@@ -301,10 +301,10 @@ export const addUser = async (req, res) => {
             role: "USER"
         });
 
-        const savedUser = await newUser.save();
+        let savedUser = await newUser.save();
         delete savedUser.password;
 
-        res.status(201).json(savedUser);
+        res.status(201).json({name:savedUser.name,email:savedUser.email});
     } catch (err) {
         console.log(err)
         res.status(500).json({ error: err.message });
@@ -338,9 +338,8 @@ export const editUser = async (req, res) => {
 
 
 
-        const savedUser = await user.save();
-        delete savedUser.password;
-        res.status(201).json(savedUser);
+        let savedUser = await user.save();
+        res.status(201).json({name:savedUser.name,email:savedUser.email});
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

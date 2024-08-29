@@ -23,8 +23,7 @@ export const register=async(req,res)=>{
         });
 
         const savedUser=await newUser.save();
-        delete savedUser.password;
-        res.status(201).json(savedUser);
+        res.status(201).json({name:savedUser.name,email:savedUser.email});
     }catch(err)
     {
         res.status(500).json({error:err.message});
@@ -39,7 +38,7 @@ export const login=async(req,res)=>{
     try{
 
         const {email,password}=req.body;
-        const user=await User.findOne({email:email});
+        let user=await User.findOne({email:email});
         if(!user) return res.status(400).json({msg:"user not found"});
 
         const isMatch= await bcrypt.compare(password,user.password);
@@ -53,7 +52,7 @@ export const login=async(req,res)=>{
         const token =jwt.sign(payload,process.env.JWT_SECRET,{ expiresIn: '6h' });
         delete user.password;
 
-        res.status(200).json({token,user});
+        res.status(200).json({token,user:{_id:user._id,name:user.name,phone:user.phone,role:user.role,email:user.email}});
         
 
 
